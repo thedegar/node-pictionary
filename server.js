@@ -16,6 +16,11 @@ io.on('connection', function(socket) {
         socket.broadcast.emit('draw',position);
     });
     
+    //Broadcast the guess to all clients
+    socket.on('guess', function(guess) {
+        socket.broadcast.emit('guess',guess);
+    });
+    
 });
 
 server.listen(8080);

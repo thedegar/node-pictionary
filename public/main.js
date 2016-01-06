@@ -46,13 +46,23 @@ var pictionary = function() {
         if (event.keyCode != 13) { // Enter
             return;
         }
-    
-        console.log(guessBox.val());  //***for Thinkful*** This was ...guessBox.value().....
+        
+        //Emit guess to server
+        var guess = guessBox.val();
+        socket.emit('guess',guess);
+        
+        console.log(guess);  //***for Thinkful*** This was ...guessBox.value().....
         guessBox.val('');
     };
 
     guessBox = $('#guess input');
     guessBox.on('keydown', onKeyDown);
+    
+    //listen for guess
+    socket.on('guess',function(guess) {
+        //display the guesses *********Next step***************
+        console.log(guess);
+    });
 };
 
 $(document).ready(function() {
