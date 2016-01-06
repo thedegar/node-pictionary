@@ -38,6 +38,21 @@ var pictionary = function() {
     
     //Add socket connection to show the drawing
     socket.on('draw',draw);  //***question*** why don't you have to pass a variable into draw() here?
+    
+    //Add guess box
+    var guessBox;
+
+    var onKeyDown = function(event) {
+        if (event.keyCode != 13) { // Enter
+            return;
+        }
+    
+        console.log(guessBox.val());  //***for Thinkful*** This was ...guessBox.value().....
+        guessBox.val('');
+    };
+
+    guessBox = $('#guess input');
+    guessBox.on('keydown', onKeyDown);
 };
 
 $(document).ready(function() {
