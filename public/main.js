@@ -2,6 +2,17 @@ var pictionary = function() {
     var canvas, context;
     var socket = io();
 
+    var reset = function() {
+        drawer = false;
+        drawing = false;
+        $("#top-message,#win,.wrapper div").hide();
+        $(".wrapper, #start, #guess").show();
+        $("#lastGuess").text('');
+        context = canvas[0].getContext('2d');
+        canvas[0].width = canvas[0].offsetWidth;
+        canvas[0].height = canvas[0].offsetHeight;
+    };
+    
     var draw = function(position) {
         context.beginPath();
         context.arc(position.x, position.y,
@@ -10,6 +21,28 @@ var pictionary = function() {
     };
     
     canvas = $('canvas');
+    
+    //Handle a socket choosing to draw
+    var drawer = false;
+    $("#top-message,#win").hide();
+    $(".wrapper div").hide();
+    
+    var someoneDrawing = function() {
+        $("#top-message").show();
+        $("button").hide();
+    };
+    
+    $("#start").on("click", function() {
+        socket.emit('drawer');
+        $("#top-message,.wrapper div").show();
+        $("#guess, button").hide();
+        drawer = true;
+    });
+    
+    socket.on('drawer', function(word) {
+        someoneDrawing();
+        $("#toDraw").text(word);
+    });
     
     //Make canvas only draw when mousedown is true
     var drawing = false;
@@ -26,7 +59,7 @@ var pictionary = function() {
     canvas[0].width = canvas[0].offsetWidth;
     canvas[0].height = canvas[0].offsetHeight;
     canvas.on('mousemove', function(event) {
-        if (drawing) {
+        if (drawing === true && drawer === true) {
             var offset = canvas.offset();
             var position = {x: event.pageX - offset.left,
                             y: event.pageY - offset.top};
@@ -50,8 +83,6 @@ var pictionary = function() {
         //Emit guess to server
         var guess = guessBox.val();
         socket.emit('guess',guess);
-        
-        console.log(guess);  //***for Thinkful*** This was ...guessBox.value().....
         guessBox.val('');
     };
 
@@ -60,8 +91,27 @@ var pictionary = function() {
     
     //listen for guess
     socket.on('guess',function(guess) {
-        //display the guesses *********Next step***************
-        console.log(guess);
+        //display the guesses
+        $("#lastGuess").text(guess);
+    });
+    
+    //handle winning guess
+    socket.on('winner',function() {
+        $("#win,#win button").show();
+        $("#top-message,.wrapper").hide();
+        drawing = false;
+        drawer = false;
+    });
+    
+    //reset game
+    $("#reset").on("click", function() {
+        socket.emit('reset');
+        reset();
+    });
+    
+    //Listen for reset
+    socket.on('reset', function() {
+        reset();
     });
 };
 

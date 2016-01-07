@@ -8,6 +8,24 @@ app.use(express.static('public'));
 var server = http.Server(app);
 var io = socket_io(server);
 
+var WORDS = [
+    "word", "letter", "number", "person", "pen", "class", "people",
+    "sound", "water", "side", "place", "man", "men", "woman", "women", "boy",
+    "girl", "year", "day", "week", "month", "name", "sentence", "line", "air",
+    "land", "home", "hand", "house", "picture", "animal", "mother", "father",
+    "brother", "sister", "world", "head", "page", "country", "question",
+    "answer", "school", "plant", "food", "sun", "state", "eye", "city", "tree",
+    "farm", "story", "sea", "night", "day", "life", "north", "south", "east",
+    "west", "child", "children", "example", "paper", "music", "river", "car",
+    "foot", "feet", "book", "science", "room", "friend", "idea", "fish",
+    "mountain", "horse", "watch", "color", "face", "wood", "list", "bird",
+    "body", "dog", "family", "song", "door", "product", "wind", "ship", "area",
+    "rock", "order", "fire", "problem", "piece", "top", "bottom", "king",
+    "space"
+];
+
+var word = '';
+
 //Add socket connection to show the drawing
 io.on('connection', function(socket) {
     console.log('Client connected');
@@ -18,9 +36,26 @@ io.on('connection', function(socket) {
     
     //Broadcast the guess to all clients
     socket.on('guess', function(guess) {
-        socket.broadcast.emit('guess',guess);
+        socket.emit('guess',guess); //This should go to all clients, but is only going to emitting socket
+        socket.broadcast.emit('guess',guess); //This should and does go to all clients but the emitting socket
+        if (word === guess.toLowerCase()) {
+            socket.emit('winner');
+            socket.broadcast.emit('winner');
+        }
     });
     
+    //Listin for drawer selected
+    socket.on('drawer', function() {
+        var x = Math.floor(Math.random() * 100);
+        word = WORDS[x];
+        socket.emit('drawer',word);
+        socket.broadcast.emit('drawer',word);
+    });
+    
+    //Listen for reset
+    socket.on('reset', function() {
+        socket.broadcast.emit('reset');
+    });
 });
 
 server.listen(8080);
