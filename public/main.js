@@ -8,6 +8,7 @@ var pictionary = function() {
         $("#top-message,#win,.wrapper div").hide();
         $(".wrapper, #start, #guess").show();
         $("#lastGuess").text('');
+        $("#win h3").text('Winner Winner Chicken Dinner!!!');
         context = canvas[0].getContext('2d');
         canvas[0].width = canvas[0].offsetWidth;
         canvas[0].height = canvas[0].offsetHeight;
@@ -95,12 +96,16 @@ var pictionary = function() {
         $("#lastGuess").text(guess);
     });
     
-    //handle winning guess
-    socket.on('winner',function() {
+    var winning = function() {
         $("#win,#win button").show();
         $("#top-message,.wrapper").hide();
         drawing = false;
         drawer = false;
+    };
+    
+    //handle winning guess
+    socket.on('winner',function() {
+        winning();
     });
     
     //reset game
@@ -112,6 +117,19 @@ var pictionary = function() {
     //Listen for reset
     socket.on('reset', function() {
         reset();
+    });
+    
+    //Listen for drawer disconnect
+    socket.on('drawerDisconnect', function() {
+        winning();
+        $("#win h3").text('The drawer disconnected...');
+    });
+    
+    //Listen for game on going
+    socket.on('gameOn', function() {
+        winning();
+        $("#win h3").text('Other users are still playing, please wait.').show();
+        $("#win button").hide();
     });
 };
 

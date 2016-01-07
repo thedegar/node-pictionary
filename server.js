@@ -25,10 +25,26 @@ var WORDS = [
 ];
 
 var word = '';
+var clientID = 0;
+var clientCount = 0;
+var drawerID = null;
 
 //Add socket connection to show the drawing
 io.on('connection', function(socket) {
     console.log('Client connected');
+    clientCount+=1;
+    clientID+=1;
+    //ID each new client with unique ID
+    socket.id = clientID;
+    
+    socket.on('disconnect', function() {
+        console.log('A user has disconnected '+socket.id);
+        if (drawerID === socket.id) {
+            socket.broadcast.emit('drawerDisconnect');
+            drawerID = null;
+        }
+        clientCount-=1;
+    });
     
     socket.on('draw', function(position) {
         socket.broadcast.emit('draw',position);
@@ -46,15 +62,23 @@ io.on('connection', function(socket) {
     
     //Listin for drawer selected
     socket.on('drawer', function() {
-        var x = Math.floor(Math.random() * 100);
-        word = WORDS[x];
-        socket.emit('drawer',word);
-        socket.broadcast.emit('drawer',word);
+        if (drawerID === null) {
+            var x = Math.floor(Math.random() * 100);
+            word = WORDS[x];
+            drawerID = socket.id;
+            socket.emit('drawer',word);
+            socket.broadcast.emit('drawer',word);
+        }
+        //Handle case if a new user joins during an active game
+        else {
+            socket.emit('gameOn');
+        }
     });
     
     //Listen for reset
     socket.on('reset', function() {
         socket.broadcast.emit('reset');
+        drawerID = null;
     });
 });
 
